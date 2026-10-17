@@ -134,7 +134,7 @@ class MockProvider(Provider):
             return f"{body}\n(Source: {src}){tail}"
         if tool == "get_clinic_info":
             hours = data["hours"]
-            days = ", ".join(f"{d[:3]} {h[0]}–{h[1]}" for d, h in hours.items())
+            days = ", ".join(f"{d[:3]} {h}" for d, h in hours.items())
             fees = "; ".join(f"{(s['name'])}: ৳{s['fee_bdt']}" for s in data["services"])
             if bn:
                 return (f"{data['name']}\nঠিকানা: {data['address']}\nসময়: {days} (শুক্রবার বন্ধ)\n"

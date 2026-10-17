@@ -46,3 +46,8 @@ def test_prompt_asks_for_numbered_slots_and_plain_text():
 def test_replies_use_plain_hyphens():
     cid = _ctx().conversation_id
     assert _finish(cid, "(Source: KB‑LBP v1.0)", "agent", "en").text == "(Source: KB-LBP v1.0)"
+
+
+def test_mock_reply_shows_real_opening_hours(chat):
+    reply = chat("web-hours", "What are your opening hours?")["reply"]
+    assert "Sat 10:00-20:00" in reply and "Fri closed" in reply
