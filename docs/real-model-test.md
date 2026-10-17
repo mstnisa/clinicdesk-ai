@@ -38,4 +38,4 @@ One more change: Groq no longer serves `llama-3.1-8b-instant` on this account, s
   - The daily report pulled real numbers from the live demo and formatted the email. The send step was switched off.
   - In the events workflow, a wrong webhook secret was dropped at the first check. A correct one was routed to the calendar step.
   - That run also showed that n8n rejects `primary` as a calendar ID, so the docs now say to use the calendar's email-style ID.
-  - With a real Google account connected, the calendar step created the booking as a calendar event with the right service, time and Dhaka time zone. The test event was then deleted. The daily report was also sent once through Gmail, to my own address, and arrived.
+  - With a real Google account connected, the calendar step created the booking as a calendar event with the right service, time and Dhaka time zone. The test event was then deleted. The daily report was also sent once through Gmail, to my own address, and Gmail confirmed it as sent.
