@@ -1,0 +1,24 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Unit and integration tests
+        run: pytest
+      - name: Behaviour evals (offline mock provider)
+        run: python -m evals.run
+      - name: Validate n8n workflow files
+        run: python -c "import json,glob; [json.load(open(f)) for f in glob.glob('../n8n/*.json')]; print('n8n workflows OK')"

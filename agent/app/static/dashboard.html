@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClinicDesk AI · Staff dashboard</title>
+<style>
+  :root{--bg:#f4f6f5;--card:#fff;--ink:#14231f;--mute:#5d6d68;--brand:#0f766e;--brand-ink:#fff;--line:#dfe6e3;--red:#b42318;--amber:#9a6700;--green:#067647}
+  @media (prefers-color-scheme: dark){:root{--bg:#0e1513;--card:#16201d;--ink:#e6efec;--mute:#9db0aa;--brand:#2dd4bf;--brand-ink:#04201c;--line:#24322e;--red:#ff8a80;--amber:#f5c451;--green:#6ce9a6}}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif}
+  header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+  h1{font-size:18px;margin:0} .sub{color:var(--mute);font-size:13px}
+  nav{display:flex;gap:4px;flex-wrap:wrap;padding:12px 20px}
+  nav button{background:transparent;border:1px solid var(--line);color:var(--ink);padding:7px 12px;border-radius:999px;cursor:pointer;font:inherit}
+  nav button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+  main{padding:0 20px 40px;max-width:1200px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:8px 0 20px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .tile b{display:block;font-size:26px;font-variant-numeric:tabular-nums} .tile span{color:var(--mute);font-size:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;overflow-x:auto}
+  table{border-collapse:collapse;width:100%} th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mute);font-weight:600;font-size:12px} td.num{font-variant-numeric:tabular-nums;text-align:right}
+  .pill{display:inline-block;padding:1px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+  .red{color:var(--red);border-color:var(--red)} .amber{color:var(--amber);border-color:var(--amber)} .green{color:var(--green);border-color:var(--green)}
+  button.act{padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;margin-right:4px}
+  button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+  pre{white-space:pre-wrap;margin:0;font:inherit} .muted{color:var(--mute)}
+  .bar{height:10px;border-radius:6px;background:var(--brand)} .barrow{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .barrow .lbl{width:170px;color:var(--mute)} .barrow .val{width:40px;text-align:right;font-variant-numeric:tabular-nums}
+  .split{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:16px} @media (max-width:800px){.split{grid-template-columns:1fr}}
+  .row-click{cursor:pointer} .row-click:hover{background:var(--bg)}
+  .bubble{padding:8px 10px;border-radius:10px;margin:6px 0;max-width:90%} .b-user{background:var(--bg);margin-left:auto} .b-assistant{border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>ClinicDesk AI · Staff dashboard</h1><div class="sub" id="meta">Loading…</div></div>
+  <div><a class="act" href="/widget">Open patient chat →</a> <button class="act" onclick="setToken()">Admin token</button></div>
+</header>
+<nav id="tabs"></nav>
+<main id="view"></main>
+<script>
+let TOKEN = 'change-me'; try { TOKEN = localStorage.getItem('cd_token') || TOKEN; } catch(e) {}
+function setToken(){ const t = prompt('Admin token (ADMIN_TOKEN in .env)', TOKEN); if(t){ TOKEN=t; try{localStorage.setItem('cd_token',t);}catch(e){} show(current); } }
+async function api(path, opts={}){ const r = await fetch(path,{...opts,headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}});
+  if(r.status===401){ throw new Error('Wrong admin token — click "Admin token".'); } if(!r.ok) throw new Error(r.status); return r.json(); }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const when = s => s ? new Date(s).toLocaleString() : '';
+const TABS = {overview:'Overview', conversations:'Conversations', escalations:'Escalations', bookings:'Bookings', leads:'Leads', outreach:'Outreach (approval)', security:'Security'};
+let current = 'overview';
+document.getElementById('tabs').innerHTML = Object.entries(TABS).map(([k,v])=>`<button data-k="${k}">${v}</button>`).join('');
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.k));
+const view = document.getElementById('view');
+
+async function show(k){ current=k; document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.k===k));
+  try { await R[k](); } catch(e){ view.innerHTML = `<div class="card red">${esc(e.message)}</div>`; } }
+
+function table(cols, rows, empty='Nothing here yet.'){ if(!rows.length) return `<p class="muted">${empty}</p>`;
+  return `<table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td${c[2]?' class="num"':''}>${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
+
+const R = {
+  async overview(){ const s = await api('/api/admin/stats?days=30');
+    document.getElementById('meta').textContent = `Model provider: ${s.provider} · knowledge version ${s.knowledge_version} · last ${s.days} days`;
+    const r = s.replies_by_route, total = Object.values(r).reduce((a,b)=>a+b,0)||1, noLLM=(r.red_flag||0)+(r.security||0)+(r.cache||0)+(r.rate_limit||0);
+    const labels = {agent:'AI agent (main model)', small:'Small model only', cache:'Answer cache', red_flag:'Safety rule → staff', security:'Injection blocked', rate_limit:'Rate limited', fallback:'Fallback'};
+    view.innerHTML = `<div class="tiles">
+      <div class="tile"><b>${s.conversations}</b><span>Conversations</span></div>
+      <div class="tile"><b>${s.bookings}</b><span>Bookings made by the agent</span></div>
+      <div class="tile"><b>${s.leads}</b><span>Leads captured</span></div>
+      <div class="tile"><b class="${s.open_escalations?'red':''}">${s.open_escalations}</b><span>Open escalations</span></div>
+      <div class="tile"><b>৳${s.cost_per_conversation_bdt}</b><span>AI cost per conversation</span></div>
+      <div class="tile"><b>${Math.round(noLLM/total*100)}%</b><span>Replies with no model call</span></div></div>
+      <div class="card"><strong>How replies were produced</strong>
+      ${Object.entries(r).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="barrow"><span class="lbl">${labels[k]||k}</span><div class="bar" style="width:${Math.max(4,v/total*100*3)}px"></div><span class="val">${v}</span></div>`).join('')}
+      <p class="muted">Cheap layers run first: safety rules, injection filter and cache answer without any model; a small model triages; the main model runs only when tools are needed.</p></div>
+      <div class="card"><strong>Tokens & cost (30 days)</strong><p>${s.llm_calls} model calls · input ${s.tokens.input.toLocaleString()} · cached ${s.tokens.cached.toLocaleString()} · output ${s.tokens.output.toLocaleString()} · total ৳${s.cost_bdt} ($${s.cost_usd})</p></div>`; },
+
+  async conversations(){ const rows = await api('/api/admin/conversations');
+    view.innerHTML = `<div class="split"><div class="card">${table([['#',r=>r.id],['Channel',r=>r.channel],['Patient',r=>esc(r.sender_masked)],['Status',r=>`<span class="pill ${r.status==='escalated'?'red':''}">${r.status}</span>`],['Cost',r=>'৳'+r.cost_bdt.toFixed(3),1]], rows)}</div><div class="card" id="tx"><p class="muted">Select a conversation.</p></div></div>`;
+    view.querySelectorAll('tbody tr').forEach((tr,i)=>{ tr.classList.add('row-click'); tr.onclick=()=>openConv(rows[i].id); }); },
+
+  async escalations(){ const rows = await api('/api/admin/escalations');
+    view.innerHTML = `<div class="card">${table([['#',r=>r.id],['Kind',r=>`<span class="pill ${r.kind==='red_flag'?'red':'amber'}">${r.kind}</span>`],['Reason',r=>esc(r.reason)],['Conversation',r=>`<a href="#" onclick="show('conversations');setTimeout(()=>openConv(${r.conversation_id}),300);return false">#${r.conversation_id}</a>`],['When',r=>when(r.created_at)],['',r=>r.status==='open'?`<button class="act primary" onclick="resolveEsc(${r.id})">Mark resolved</button>`:'<span class="pill green">resolved</span>']], rows, 'No escalations.')}</div>`; },
+
+  async bookings(){ const rows = await api('/api/admin/bookings');
+    view.innerHTML = `<div class="card">${table([['#',r=>r.id],['Slot',r=>esc(r.slot_start)],['Patient',r=>esc(r.name)],['Phone',r=>esc(r.phone)],['Service',r=>esc(r.service)],['Status',r=>`<span class="pill green">${r.status}</span>`]], rows)}</div>`; },
+
+  async leads(){ const rows = await api('/api/admin/leads');
+    view.innerHTML = `<div class="card">${table([['#',r=>r.id],['Name',r=>esc(r.name)],['Phone',r=>esc(r.phone)],['Condition',r=>esc(r.condition)],['Urgency',r=>esc(r.urgency)],['Score',r=>r.score,1],['Stage',r=>`<span class="pill">${r.stage}</span>`],['Source',r=>r.source]], rows)}</div>`; },
+
+  async outreach(){ const rows = await api('/api/admin/outreach');
+    view.innerHTML = `<div class="card"><p class="muted">Drafts from the GTM pipeline. Nothing is sent until you approve it; n8n then sends approved drafts and marks them sent.</p>${table([['ICP',r=>r.icp_score,1],['Clinic',r=>`<strong>${esc(r.company)}</strong><div class="muted">${esc(r.icp_reasons)}</div>`],['Draft',r=>`<strong>${esc(r.subject)}</strong><pre class="muted">${esc(r.body)}</pre>`],['Status',r=>`<span class="pill ${r.status==='approved'?'green':r.status==='rejected'?'red':''}">${r.status}</span>`],['',r=>r.status==='pending_approval'?`<button class="act primary" onclick="outAct(${r.id},'approve')">Approve</button><button class="act" onclick="outAct(${r.id},'reject')">Reject</button>`:'']], rows, 'No drafts. Run: docker compose exec agent python -m gtm.pipeline')}</div>`; },
+
+  async security(){ const rows = await api('/api/admin/security');
+    view.innerHTML = `<div class="card">${table([['#',r=>r.id],['Kind',r=>`<span class="pill amber">${r.kind}</span>`],['Detail (redacted)',r=>esc(r.detail)],['When',r=>when(r.created_at)]], rows, 'No security events.')}</div>`; },
+};
+async function openConv(id){ const msgs = await api('/api/admin/conversations/'+id); const tx=document.getElementById('tx'); if(!tx) return;
+  tx.innerHTML = `<strong>Conversation #${id}</strong><p class="muted">Stored transcript is PII-redacted.</p>` + msgs.map(m=>`<div class="bubble b-${m.role}"><pre>${esc(m.content)}</pre>${m.route?`<div class="muted">${m.route}</div>`:''}</div>`).join(''); }
+async function resolveEsc(id){ await api(`/api/admin/escalations/${id}/resolve`,{method:'POST'}); show('escalations'); }
+async function outAct(id,a){ await api(`/api/admin/outreach/${id}/${a}`,{method:'POST'}); show('outreach'); }
+show('overview');
+</script>
+</body>
+</html>

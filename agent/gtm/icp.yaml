@@ -1,0 +1,26 @@
+# Ideal Customer Profile for selling ClinicDesk AI.
+# Who buys: small private physiotherapy / rehab clinics in Dhaka that get
+# patient enquiries on WhatsApp and Facebook but have no online booking.
+name: Private physio & rehab clinics, Dhaka
+search_queries:
+  - physiotherapy center Dhaka
+  - physiotherapy clinic Dhanmondi
+  - physiotherapy clinic Uttara
+  - rehabilitation center Mirpur
+location: Dhaka, Bangladesh
+max_places_per_query: 40
+
+# Each signal adds points when true. Total is capped at 100.
+signals:
+  is_physio_or_rehab:   {points: 25, why: "Core vertical: physio / rehab"}
+  in_target_city:       {points: 10, why: "In Dhaka"}
+  has_website:          {points: 10, why: "Has a website we can add the chat widget to"}
+  lists_whatsapp:       {points: 15, why: "Already takes enquiries on WhatsApp"}
+  no_online_booking:    {points: 20, why: "No online booking today: clear gap"}
+  good_rating:          {points: 10, why: "Rating 4.0+: cares about patient experience"}
+  enough_reviews:       {points: 10, why: "20-500 reviews: busy enough to need help, small enough to sell to"}
+disqualify:
+  - is_hospital         # big hospitals buy through procurement, not a fit
+  - permanently_closed
+  - outside_target_city # we can only do onboarding visits in Dhaka for now
+min_score_to_contact: 60

@@ -1,0 +1,122 @@
+{
+  "name": "ClinicDesk 04 - Daily KPI and AI cost report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 21 * * *"
+            }
+          ]
+        }
+      },
+      "id": "eb9f6159-3617-578f-b9a6-03166a3a41fc",
+      "name": "Daily 21:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.CLINICDESK_API_URL || 'http://agent:8000' }}/api/admin/stats?days=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.CLINICDESK_ADMIN_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a4615046-5c5d-5fe8-8cfc-a9b64063ae72",
+      "name": "Stats (24h)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $input.first().json;\nconst r = s.replies_by_route || {};\nconst text = [\n  `ClinicDesk daily report — ${DateTime.now().setZone('Asia/Dhaka').toFormat('cccc d LLL yyyy')}`,\n  ``,\n  `Conversations: ${s.conversations}`,\n  `New leads: ${s.leads}   Bookings: ${s.bookings}`,\n  `Open escalations: ${s.open_escalations}   Security events: ${s.security_events}`,\n  ``,\n  `AI cost today: ৳${s.cost_bdt} (${s.llm_calls} model calls)`,\n  `Cost per conversation: ৳${s.cost_per_conversation_bdt}`,\n  `Replies with no model call (rules/cache): ${(r.red_flag||0)+(r.security||0)+(r.cache||0)}`,\n].join('\\n');\nreturn [{ json: { text } }];"
+      },
+      "id": "8d68b285-16f5-52b8-8c09-522ed12c417b",
+      "name": "Format report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $env.CLINICDESK_ALERT_EMAIL }}",
+        "subject": "ClinicDesk daily report",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "id": "341ad836-33ca-5236-981a-84afb872cf52",
+      "name": "Email owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        660,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 21:00": {
+      "main": [
+        [
+          {
+            "node": "Stats (24h)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stats (24h)": {
+      "main": [
+        [
+          {
+            "node": "Format report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format report": {
+      "main": [
+        [
+          {
+            "node": "Email owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Dhaka"
+  },
+  "meta": {
+    "description": "Daily email with conversations, leads, bookings, escalations and AI cost per conversation."
+  },
+  "pinData": {}
+}

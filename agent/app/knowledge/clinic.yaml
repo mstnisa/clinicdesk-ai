@@ -1,0 +1,31 @@
+# Fictional demo clinic. Replace with the real clinic's details.
+name: Arogga Physio Care (demo)
+address: House 12, Road 7, Dhanmondi, Dhaka 1205
+phone: "+880 1700-000000"
+timezone: Asia/Dhaka
+hours:
+  # weekday: [open, close] in 24h, local time. Missing day = closed.
+  Saturday: ["10:00", "20:00"]
+  Sunday: ["10:00", "20:00"]
+  Monday: ["10:00", "20:00"]
+  Tuesday: ["10:00", "20:00"]
+  Wednesday: ["10:00", "20:00"]
+  Thursday: ["10:00", "17:00"]
+slot_minutes: 45
+services:
+  - id: assessment
+    name: First assessment (45 min)
+    name_bn: প্রথম অ্যাসেসমেন্ট (৪৫ মিনিট)
+    fee_bdt: 1200
+  - id: follow_up
+    name: Follow-up session (45 min)
+    name_bn: ফলো-আপ সেশন (৪৫ মিনিট)
+    fee_bdt: 800
+  - id: home_visit
+    name: Home visit inside Dhaka (60 min)
+    name_bn: ঢাকার ভেতরে হোম ভিজিট (৬০ মিনিট)
+    fee_bdt: 2000
+payment: Cash, bKash or card at the clinic. No advance payment is needed to book.
+cancellation: Please cancel or reschedule at least 3 hours before your slot.
+emergency_line: "If this is an emergency, call 999 or go to the nearest hospital emergency department."
+emergency_line_bn: "জরুরি অবস্থায় এখনই ৯৯৯-এ কল করুন অথবা নিকটস্থ হাসপাতালের জরুরি বিভাগে যান।"

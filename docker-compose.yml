@@ -1,0 +1,77 @@
+# ClinicDesk AI — full stack: agent API + Postgres + n8n.
+#   cp .env.example .env && docker compose up -d --build
+# Then open http://localhost:8000/widget (patient chat) and http://localhost:8000/dashboard (staff).
+# For a VPS with HTTPS add:  docker compose --profile https up -d   (see docs/deploy-vps.md)
+
+services:
+  agent:
+    build: ./agent
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://clinicdesk:${POSTGRES_PASSWORD}@db:5432/clinicdesk
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678/webhook/clinicdesk-events}
+    depends_on:
+      db: {condition: service_healthy}
+    volumes:
+      # clinicians edit pages here; POST /api/admin/knowledge/reload picks them up without a rebuild
+      - ./agent/app/knowledge:/srv/app/knowledge:ro
+    # Bound to localhost by default. On a VPS, Caddy (profile "https") is the only public entry point.
+    ports: ["${BIND_ADDRESS:-127.0.0.1}:${AGENT_PORT:-8000}:8000"]
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: clinicdesk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: clinicdesk
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinicdesk -d clinicdesk"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    environment:
+      GENERIC_TIMEZONE: Asia/Dhaka
+      TZ: Asia/Dhaka
+      N8N_HOST: ${N8N_HOST:-localhost}
+      WEBHOOK_URL: ${N8N_PUBLIC_URL:-http://localhost:5678/}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"     # workflows read the CLINICDESK_* variables below
+      CLINICDESK_API_URL: http://agent:8000
+      CLINICDESK_ADMIN_TOKEN: ${ADMIN_TOKEN}
+      CLINICDESK_SHEET_ID: ${CLINICDESK_SHEET_ID:-}
+      CLINICDESK_CALENDAR_ID: ${CLINICDESK_CALENDAR_ID:-}
+      CLINICDESK_ALERT_EMAIL: ${CLINICDESK_ALERT_EMAIL:-}
+      CLINIC_ADDRESS: ${CLINIC_ADDRESS:-}
+      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_API_VERSION: ${WHATSAPP_API_VERSION:-v21.0}
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-}
+    volumes:
+      - n8ndata:/home/node/.n8n
+      - ./n8n:/workflows:ro
+    ports: ["${BIND_ADDRESS:-127.0.0.1}:${N8N_PORT:-5678}:5678"]
+    restart: unless-stopped
+
+  caddy:
+    profiles: ["https"]
+    image: caddy:2-alpine
+    environment:
+      AGENT_DOMAIN: ${AGENT_DOMAIN}
+      N8N_DOMAIN: ${N8N_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    ports: ["80:80", "443:443"]
+    depends_on: [agent, n8n]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  n8ndata:
+  caddydata:

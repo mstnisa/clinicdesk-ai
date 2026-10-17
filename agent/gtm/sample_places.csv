@@ -1,0 +1,9 @@
+name,category,city,address,website,phone,rating,reviews,status,notes
+Lalmatia Spine & Physio (fictional),Physiotherapy center,Dhaka,"Lalmatia, Dhaka",https://lalmatia-physio.example.com,+8801700000001,4.6,212,OPERATIONAL,"Website lists WhatsApp; booking by phone only"
+Uttara Rehab Point (fictional),Rehabilitation center,Dhaka,"Sector 7, Uttara, Dhaka",https://uttara-rehab.example.com,+8801700000002,4.3,88,OPERATIONAL,"Facebook page, WhatsApp button; no booking form"
+Mirpur Family Physio (fictional),Physiotherapist,Dhaka,"Mirpur 10, Dhaka",,+8801700000003,4.8,41,OPERATIONAL,"No website; Facebook only"
+Gulshan Sports Clinic (fictional),Sports medicine clinic,Dhaka,"Gulshan 2, Dhaka",https://gulshan-sports.example.com,+8801700000004,4.1,530,OPERATIONAL,"Has online booking widget"
+Metro General Hospital (fictional),Hospital,Dhaka,"Panthapath, Dhaka",https://metro-general.example.com,+8801700000005,3.9,2400,OPERATIONAL,"Large hospital"
+Bashundhara Physio Hub (fictional),Physiotherapy center,Dhaka,"Block C, Bashundhara R/A, Dhaka",https://bashundhara-physio.example.com,+8801700000006,4.4,130,OPERATIONAL,"WhatsApp on site; books via Messenger"
+Old Town Pain Relief (fictional),Physiotherapy center,Dhaka,"Lalbagh, Dhaka",,+8801700000007,3.6,12,CLOSED_PERMANENTLY,"Closed"
+Chattogram Physio Care (fictional),Physiotherapy center,Chattogram,"GEC, Chattogram",https://ctg-physio.example.com,+8801700000008,4.5,95,OPERATIONAL,"Outside Dhaka"

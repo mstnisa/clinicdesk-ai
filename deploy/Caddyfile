@@ -1,0 +1,10 @@
+# Automatic HTTPS (Let's Encrypt) for the agent and n8n.
+{$AGENT_DOMAIN} {
+	encode gzip
+	reverse_proxy agent:8000
+}
+
+{$N8N_DOMAIN} {
+	encode gzip
+	reverse_proxy n8n:5678
+}

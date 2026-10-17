@@ -1,0 +1,37 @@
+# Model tiers and prices (USD per 1M tokens).
+#
+# The router uses the SMALL tier for cheap jobs (intent + language triage,
+# lead scoring) and the MAIN tier only when the agent has to reason with tools.
+# Prices change often: update them from each provider's pricing page.
+# `cached_input` is the price for prompt-cache hits where the provider supports it.
+
+providers:
+  openai:
+    small: gpt-4o-mini
+    main: gpt-4.1-mini
+  anthropic:
+    small: claude-haiku-4-5
+    main: claude-sonnet-4-5
+  gemini:
+    small: gemini-2.5-flash-lite
+    main: gemini-2.5-flash
+  groq:
+    small: llama-3.1-8b-instant
+    main: openai/gpt-oss-120b
+  mock:
+    small: mock-small
+    main: mock-main
+
+prices:
+  gpt-4o-mini:            {input: 0.15, output: 0.60, cached_input: 0.075}
+  gpt-4.1-mini:           {input: 0.40, output: 1.60, cached_input: 0.10}
+  claude-haiku-4-5:       {input: 1.00, output: 5.00, cached_input: 0.10}
+  claude-sonnet-4-5:      {input: 3.00, output: 15.00, cached_input: 0.30}
+  gemini-2.5-flash-lite:  {input: 0.10, output: 0.40, cached_input: 0.025}
+  gemini-2.5-flash:       {input: 0.30, output: 2.50, cached_input: 0.075}
+  llama-3.1-8b-instant:   {input: 0.05, output: 0.08, cached_input: 0.05}
+  openai/gpt-oss-120b:    {input: 0.15, output: 0.75, cached_input: 0.15}
+  # The offline mock is priced like a small hosted model so the dashboard
+  # shows realistic numbers during demos.
+  mock-small:             {input: 0.10, output: 0.40, cached_input: 0.025}
+  mock-main:              {input: 0.30, output: 2.50, cached_input: 0.075}

@@ -1,0 +1,147 @@
+{
+  "name": "ClinicDesk 02 - WhatsApp appointment reminders",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Reminders\nEvery hour: fetch bookings starting in the next 24h and send a WhatsApp reminder **template** (Meta requires an approved template for messages sent outside the 24h chat window).\nTemplate `appointment_reminder` with 3 variables: name, date-time, address.",
+        "width": 420,
+        "height": 220
+      },
+      "id": "9fb7cdd5-d41a-5b1c-b073-a0cce73b2db1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "7b98264d-2b30-5608-a117-d07283dff325",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.CLINICDESK_API_URL || 'http://agent:8000' }}/api/admin/bookings/upcoming?hours=24",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.CLINICDESK_ADMIN_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9689be2b-afd1-52a0-b3a1-df82c64eedb4",
+      "name": "Upcoming bookings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// One reminder per booking: only bookings that start 23-24 hours from now.\nconst now = DateTime.now().setZone('Asia/Dhaka');\nreturn $input.all().filter(i => {\n  const start = DateTime.fromFormat(i.json.slot_start, 'yyyy-MM-dd HH:mm', { zone: 'Asia/Dhaka' });\n  const h = start.diff(now, 'hours').hours;\n  return h > 23 && h <= 24;\n});"
+      },
+      "id": "937d5fea-55bd-5fde-9e0b-58277f4b8852",
+      "name": "Due in 23-24h",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $env.WHATSAPP_API_VERSION || 'v21.0' }}/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  messaging_product: 'whatsapp', to: $json.phone.replace(/^0/, '880'), type: 'template',\n  template: { name: 'appointment_reminder', language: { code: 'en' },\n    components: [{ type: 'body', parameters: [\n      { type: 'text', text: $json.name },\n      { type: 'text', text: DateTime.fromFormat($json.slot_start, 'yyyy-MM-dd HH:mm').toFormat('cccc d LLL, HH:mm') },\n      { type: 'text', text: $env.CLINIC_ADDRESS || 'our clinic' } ] }] } }) }}",
+        "options": {}
+      },
+      "id": "2ed74eab-c417-5b58-8bb5-2ed15bf49041",
+      "name": "Send WhatsApp template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Every hour": {
+      "main": [
+        [
+          {
+            "node": "Upcoming bookings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upcoming bookings": {
+      "main": [
+        [
+          {
+            "node": "Due in 23-24h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Due in 23-24h": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Dhaka"
+  },
+  "meta": {
+    "description": "Hourly: WhatsApp reminder template to patients whose appointment is 23-24 hours away."
+  },
+  "pinData": {}
+}

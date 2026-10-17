@@ -1,0 +1,341 @@
+{
+  "name": "ClinicDesk 01 - Agent events to Sheets, Calendar and staff alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Agent events\nThe agent POSTs lead.created, booking.created and escalation.created here (set N8N_WEBHOOK_URL on the agent). If N8N_WEBHOOK_SECRET is set on both sides, requests without the matching X-Webhook-Secret header are dropped.\n\n- Leads → Google Sheet tab **Leads**\n- Bookings → Sheet tab **Bookings** + Google Calendar event\n- Escalations → urgent email to the clinic lead",
+        "width": 420,
+        "height": 220
+      },
+      "id": "9fb7cdd5-d41a-5b1c-b073-a0cce73b2db1",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clinicdesk-events",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "10ca773f-92ad-535e-91ea-4264009524e6",
+      "name": "Agent event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        0
+      ],
+      "webhookId": "clinicdesk-events"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "6d0f24ae-e306-4579-b919-4255c5adab10",
+              "leftValue": "={{ !$env.N8N_WEBHOOK_SECRET || $json.headers['x-webhook-secret'] === $env.N8N_WEBHOOK_SECRET }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6ccf7716-b8b7-57e2-b699-5d0d74a42e25",
+      "name": "Check secret",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "9c68361f-09b4-4565-930f-01294291d664",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "lead.created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lead.created"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "36d21861-d172-4f3e-94bb-df7f6154abeb",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "booking.created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "booking.created"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "53b95e31-2ac2-4a72-9dac-3b0d04602285",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "escalation.created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "escalation.created"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0b15eaf3-48ff-5da5-9016-dae0142fa4d5",
+      "name": "Route by event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.CLINICDESK_SHEET_ID }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead ID": "={{ $json.body.lead_id }}",
+            "Name": "={{ $json.body.name }}",
+            "Phone": "={{ $json.body.phone }}",
+            "Condition": "={{ $json.body.condition }}",
+            "Urgency": "={{ $json.body.urgency }}",
+            "Score": "={{ $json.body.score }}",
+            "Channel": "={{ $json.body.channel }}",
+            "Created": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "8e388874-e98b-5cba-b46a-e0130a510844",
+      "name": "Lead to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.CLINICDESK_SHEET_ID }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Bookings"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Booking ID": "={{ $json.body.booking_id }}",
+            "Name": "={{ $json.body.name }}",
+            "Phone": "={{ $json.body.phone }}",
+            "Service": "={{ $json.body.service }}",
+            "Slot": "={{ $json.body.slot_start }}",
+            "Fee (BDT)": "={{ $json.body.fee_bdt }}",
+            "Reason": "={{ $json.body.reason }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "1e5f13b0-d2b8-570f-a2e4-456847ddc4e8",
+      "name": "Booking to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.CLINICDESK_CALENDAR_ID }}"
+        },
+        "start": "={{ DateTime.fromFormat($('Agent event').item.json.body.slot_start, 'yyyy-MM-dd HH:mm', {zone: 'Asia/Dhaka'}).toISO() }}",
+        "end": "={{ DateTime.fromFormat($('Agent event').item.json.body.slot_start, 'yyyy-MM-dd HH:mm', {zone: 'Asia/Dhaka'}).plus({minutes: 45}).toISO() }}",
+        "additionalFields": {
+          "summary": "={{ $('Agent event').item.json.body.service }} — {{ $('Agent event').item.json.body.name }}",
+          "description": "=Phone: {{ $('Agent event').item.json.body.phone }}\nReason: {{ $('Agent event').item.json.body.reason }}\nBooked by ClinicDesk AI ({{ $('Agent event').item.json.body.channel }})"
+        }
+      },
+      "id": "e7dc57fb-4d5a-5542-868b-d9cfac26cadd",
+      "name": "Calendar event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $env.CLINICDESK_ALERT_EMAIL }}",
+        "subject": "=🚩 ClinicDesk escalation ({{ $json.body.kind }}) — conversation #{{ $json.body.conversation_id }}",
+        "emailType": "text",
+        "message": "=Kind: {{ $json.body.kind }}\nFlags/reason: {{ ($json.body.flags || []).join(', ') || $json.body.reason }}\nChannel: {{ $json.body.channel }}\n\nOpen the dashboard → Escalations and reply to the patient.",
+        "options": {}
+      },
+      "id": "1cdf7791-6fb0-5804-a1f9-2b53a68e0812",
+      "name": "Alert clinic lead",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        520,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Agent event": {
+      "main": [
+        [
+          {
+            "node": "Check secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check secret": {
+      "main": [
+        [
+          {
+            "node": "Route by event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by event": {
+      "main": [
+        [
+          {
+            "node": "Lead to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Booking to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert clinic lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Calendar event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Dhaka"
+  },
+  "meta": {
+    "description": "Receives agent events and syncs them to Google Sheets, Google Calendar and staff email."
+  },
+  "pinData": {}
+}
