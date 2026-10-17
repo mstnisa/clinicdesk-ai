@@ -22,3 +22,20 @@ jobs:
         run: python -m evals.run
       - name: Validate n8n workflow files
         run: python -c "import json,glob; [json.load(open(f)) for f in glob.glob('../n8n/*.json')]; print('n8n workflows OK')"
+
+  docker:
+    name: Docker stack (agent + Postgres + n8n)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the stack
+        run: |
+          cp .env.example .env
+          docker compose up -d --build
+      - name: End-to-end checks
+        run: ./deploy/smoke-test.sh
+      - name: Import the n8n workflows into the running n8n
+        run: docker compose exec -T n8n n8n import:workflow --separate --input=/workflows
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail=80
