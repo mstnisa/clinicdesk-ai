@@ -3,8 +3,8 @@ title: ClinicDesk AI
 emoji: 🩺
 colorFrom: green
 colorTo: blue
-sdk: docker
-app_port: 7860
+sdk: gradio
+app_file: app.py
 pinned: false
 license: mit
 short_description: Bangla + English AI front desk for physio clinics
