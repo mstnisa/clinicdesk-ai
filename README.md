@@ -47,7 +47,7 @@ Open the [live demo](https://awalunnisa-clinicdesk-ai.hf.space/widget) and send 
 
 The staff dashboard is at `/dashboard`. The demo token is `change-me`.
 
-The free demo may take half a minute to wake up if nobody has used it for a while. It runs on the offline `mock` model unless a Groq key is set, so it costs nothing to keep online. The safety rules, bookings, handover and dashboard are the same code either way.
+The free demo may take half a minute to wake up if nobody has used it for a while. It answers with real models on Groq. If it reaches its daily limit of model calls, it switches to the offline `mock` model for the rest of the day, so a busy day can never run up a bill. The safety rules, bookings, handover and dashboard are the same code either way.
 
 ## How a message is handled
 
