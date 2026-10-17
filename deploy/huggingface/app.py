@@ -29,6 +29,22 @@ if not (HOME / "agent").exists():
 os.chdir(HOME / "agent")
 sys.path.insert(0, str(HOME / "agent"))
 
+try:  # free Spaces run on ZeroGPU, which expects one GPU function; the app itself only needs the CPU
+    import spaces
+
+    @spaces.GPU
+    def _unused_gpu_hook():
+        return None
+
+    from spaces.config import Config
+
+    if Config.zero_gpu:  # normally sent by Gradio's launch(); this app is served by uvicorn instead
+        from spaces.zero import client
+
+        client.startup_report()
+except ImportError:
+    pass
+
 from scripts import seed_demo  # noqa: E402
 
 seed_demo.main()
