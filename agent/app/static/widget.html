@@ -3,40 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ClinicDesk AI · Patient chat</title>
+<title>Patient chat | ClinicDesk</title>
 <style>
-  :root{--bg:#f4f6f5;--card:#fff;--ink:#14231f;--mute:#5d6d68;--brand:#0f766e;--brand-ink:#fff;--me:#dcf3ec;--line:#dfe6e3;--red:#b42318;--amber:#9a6700}
-  @media (prefers-color-scheme: dark){:root{--bg:#0e1513;--card:#16201d;--ink:#e6efec;--mute:#9db0aa;--brand:#2dd4bf;--brand-ink:#04201c;--me:#173a33;--line:#24322e;--red:#ff8a80;--amber:#f5c451}}
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif}
-  .wrap{max-width:720px;margin:0 auto;padding:24px 16px}
-  h1{font-size:20px;margin:0 0 4px} p.sub{margin:0 0 16px;color:var(--mute)}
-  .chat{background:var(--card);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;height:70vh;min-height:420px}
-  .head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
-  .dot{width:10px;height:10px;border-radius:50%;background:#22c55e}
+  :root{--bg:#ffffff;--soft:#f6f9fb;--ink:#2a2f33;--mute:#6b7378;--line:#e3e8ec;--sky:#3f8fc0;--sky-soft:#e8f3fa;--olive:#6f7c42;--olive-soft:#f1f3e6;--yellow-soft:#fdf7dc;--red:#b4462f}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",Roboto,"Noto Sans Bengali",Helvetica,Arial,sans-serif}
+  .wrap{max-width:700px;margin:0 auto;padding:28px 16px}
+  h1{font-size:19px;font-weight:600;margin:0 0 2px} p.sub{margin:0 0 18px;color:var(--mute);font-size:14px}
+  .chat{background:var(--bg);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;height:68vh;min-height:420px}
+  .head{padding:12px 16px;border-bottom:1px solid var(--line);background:var(--soft);border-radius:10px 10px 0 0;font-size:14px}
+  .head small{color:var(--mute);margin-left:8px}
   .log{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-  .msg{max-width:85%;padding:10px 12px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word}
-  .bot{background:var(--bg);align-self:flex-start;border-bottom-left-radius:4px}
-  .me{background:var(--me);align-self:flex-end;border-bottom-right-radius:4px}
-  .meta{font-size:12px;color:var(--mute);margin-top:4px}
-  .tag{display:inline-block;padding:1px 7px;border-radius:999px;border:1px solid var(--line);margin-right:4px}
-  .tag.red_flag{color:var(--red);border-color:var(--red)} .tag.security{color:var(--amber);border-color:var(--amber)}
+  .msg{max-width:84%;padding:9px 12px;border-radius:8px;white-space:pre-wrap;word-wrap:break-word}
+  .bot{background:var(--soft);border:1px solid var(--line);align-self:flex-start}
+  .me{background:var(--sky-soft);align-self:flex-end}
+  .meta{font-size:12px;color:var(--mute);margin-top:5px}
+  .tag{display:inline-block;padding:0 6px;border-radius:4px;background:var(--olive-soft);color:var(--olive);margin-right:6px}
+  .tag.red_flag{background:#fbeae6;color:var(--red)} .tag.security{background:var(--yellow-soft);color:#7d6312}
   form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
-  input{flex:1;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
-  button{padding:10px 14px;border:0;border-radius:10px;background:var(--brand);color:var(--brand-ink);font-weight:600;cursor:pointer}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
-  .chip{background:var(--card);color:var(--ink);border:1px solid var(--line);font-weight:500;font-size:13px}
-  a{color:var(--brand)}
+  input{flex:1;min-width:0;padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+  input:focus{outline:2px solid var(--sky-soft);border-color:var(--sky)}
+  button{padding:9px 16px;border:0;border-radius:6px;background:var(--sky);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+  .hint{font-size:13px;color:var(--mute);margin:0 0 6px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+  .chip{background:var(--yellow-soft);color:var(--ink);border:1px solid #efe3b0;font-weight:400;font-size:13px;padding:5px 10px}
+  a{color:var(--sky)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>ClinicDesk AI — patient chat</h1>
-  <p class="sub">The same agent that answers on WhatsApp. Each reply shows how it was handled and what it cost. <a href="/dashboard">Staff dashboard →</a></p>
+  <h1>Patient chat</h1>
+  <p class="sub">This is the same assistant that answers the clinic's WhatsApp. Under each reply you can see how it was handled and what it cost. <a href="/dashboard">Open the staff dashboard</a></p>
+  <p class="hint">Try one of these:</p>
   <div class="chips" id="chips"></div>
   <div class="chat">
-    <div class="head"><span class="dot"></span><strong id="clinic">Clinic front desk</strong></div>
+    <div class="head"><strong>Front desk</strong><small id="prov"></small></div>
     <div class="log" id="log" aria-live="polite"></div>
-    <form id="f"><input id="q" autocomplete="off" placeholder="Type in Bangla or English…" aria-label="Message"><button>Send</button></form>
+    <form id="f"><input id="q" autocomplete="off" placeholder="Write in Bangla or English" aria-label="Message"><button>Send</button></form>
   </div>
 </div>
 <script>
@@ -50,13 +52,13 @@ function add(text, who, meta){ const d=document.createElement('div'); d.classNam
 async function send(text){ if(!text.trim()) return; add(text,'me');
   try{ const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sender_id:sender,message:text})});
     const j=await r.json(); if(!r.ok) throw new Error(j.detail||r.status);
-    const label={agent:'AI agent',small:'small model',cache:'cache · no AI call',red_flag:'safety rule → staff alerted',security:'blocked: prompt injection',rate_limit:'rate limited',fallback:'fallback'}[j.route]||j.route;
-    add(j.reply,'bot',`<span class="tag ${j.route}">${label}</span>${j.tools.length?'tools: '+j.tools.join(', ')+' · ':''}conversation cost ৳${j.conversation_cost_bdt.toFixed(3)}`);
-  }catch(e){ add('Could not reach the agent: '+e.message,'bot'); } }
+    const label={agent:'agent',small:'small model',cache:'cached, no model call',red_flag:'safety rule, staff alerted',security:'blocked: prompt injection',rate_limit:'rate limited',fallback:'fallback',handover:'waiting for staff',empty:'empty message'}[j.route]||j.route;
+    add(j.reply,'bot',`<span class="tag ${j.route}">${label}</span>${j.tools.length?'tools: '+j.tools.join(', ')+' | ':''}cost so far ৳${j.conversation_cost_bdt.toFixed(3)}`);
+  }catch(e){ add('Could not reach the assistant: '+e.message,'bot'); } }
 document.getElementById('f').onsubmit=e=>{e.preventDefault(); const q=document.getElementById('q'); send(q.value); q.value='';};
 const chips=document.getElementById('chips'); examples.forEach(t=>{const b=document.createElement('button'); b.className='chip'; b.textContent=t; b.onclick=()=>send(t); chips.appendChild(b);});
-fetch('/health').then(r=>r.json()).then(h=>{ document.getElementById('clinic').textContent = 'Clinic front desk · model provider: '+h.provider; });
-add("Hi! Ask about back or heel pain, our fees and hours, or book an appointment. বাংলায়ও লিখতে পারেন।",'bot');
+fetch('/health').then(r=>r.json()).then(h=>{ document.getElementById('prov').textContent = 'model: '+h.provider; });
+add("Hello. You can ask about back or heel pain, our fees and opening hours, or book an appointment. বাংলায়ও লিখতে পারেন।",'bot');
 </script>
 </body>
 </html>

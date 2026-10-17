@@ -3,39 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ClinicDesk AI · Staff dashboard</title>
+<title>Staff dashboard | ClinicDesk</title>
 <style>
-  :root{--bg:#f4f6f5;--card:#fff;--ink:#14231f;--mute:#5d6d68;--brand:#0f766e;--brand-ink:#fff;--line:#dfe6e3;--red:#b42318;--amber:#9a6700;--green:#067647}
-  @media (prefers-color-scheme: dark){:root{--bg:#0e1513;--card:#16201d;--ink:#e6efec;--mute:#9db0aa;--brand:#2dd4bf;--brand-ink:#04201c;--line:#24322e;--red:#ff8a80;--amber:#f5c451;--green:#6ce9a6}}
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif}
-  header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--card)}
-  h1{font-size:18px;margin:0} .sub{color:var(--mute);font-size:13px}
-  nav{display:flex;gap:4px;flex-wrap:wrap;padding:12px 20px}
-  nav button{background:transparent;border:1px solid var(--line);color:var(--ink);padding:7px 12px;border-radius:999px;cursor:pointer;font:inherit}
-  nav button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+  :root{--bg:#ffffff;--soft:#f6f9fb;--ink:#2a2f33;--mute:#6b7378;--line:#e3e8ec;--sky:#3f8fc0;--sky-soft:#e8f3fa;--olive:#6f7c42;--olive-soft:#f1f3e6;--yellow-soft:#fdf7dc;--red:#b4462f;--amber:#7d6312;--green:#6f7c42}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 "Segoe UI",Roboto,"Noto Sans Bengali",Helvetica,Arial,sans-serif}
+  header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+  h1{font-size:18px;font-weight:600;margin:0} .sub{color:var(--mute);font-size:13px}
+  header a.act{display:inline-block;text-decoration:none}
+  nav{display:flex;gap:2px;flex-wrap:wrap;padding:0 20px;border-bottom:1px solid var(--line);margin-bottom:16px}
+  nav button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--mute);padding:10px 12px;cursor:pointer;font:inherit}
+  nav button.on{color:var(--ink);border-bottom-color:var(--sky);font-weight:600}
   main{padding:0 20px 40px;max-width:1200px}
-  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:8px 0 20px}
-  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-  .tile b{display:block;font-size:26px;font-variant-numeric:tabular-nums} .tile span{color:var(--mute);font-size:12px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;overflow-x:auto}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:0 0 20px}
+  .tile{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .tile b{display:block;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums} .tile span{color:var(--mute);font-size:12px}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px;overflow-x:auto}
   table{border-collapse:collapse;width:100%} th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{color:var(--mute);font-weight:600;font-size:12px} td.num{font-variant-numeric:tabular-nums;text-align:right}
-  .pill{display:inline-block;padding:1px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
-  .red{color:var(--red);border-color:var(--red)} .amber{color:var(--amber);border-color:var(--amber)} .green{color:var(--green);border-color:var(--green)}
-  button.act{padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;margin-right:4px}
-  button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+  th{color:var(--mute);font-weight:600;font-size:12px;background:var(--soft)} td.num{font-variant-numeric:tabular-nums;text-align:right}
+  .pill{display:inline-block;padding:0 7px;border-radius:4px;background:var(--sky-soft);color:var(--ink);font-size:12px}
+  .pill.red,b.red{color:var(--red)} .pill.red{background:#fbeae6} .pill.amber{background:var(--yellow-soft);color:var(--amber)} .pill.green{background:var(--olive-soft);color:var(--olive)}
+  .act{padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;margin-right:4px;font:inherit;font-size:13px}
+  button.primary{background:var(--sky);color:#fff;border-color:var(--sky)}
   pre{white-space:pre-wrap;margin:0;font:inherit} .muted{color:var(--mute)}
-  .bar{height:10px;border-radius:6px;background:var(--brand)} .barrow{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .bar{height:10px;border-radius:3px;background:#c9d4a6} .barrow{display:flex;align-items:center;gap:8px;margin:6px 0}
   .barrow .lbl{width:170px;color:var(--mute)} .barrow .val{width:40px;text-align:right;font-variant-numeric:tabular-nums}
   .split{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:16px} @media (max-width:800px){.split{grid-template-columns:1fr}}
-  .row-click{cursor:pointer} .row-click:hover{background:var(--bg)}
-  .bubble{padding:8px 10px;border-radius:10px;margin:6px 0;max-width:90%} .b-user{background:var(--bg);margin-left:auto} .b-assistant{border:1px solid var(--line)}
+  .row-click{cursor:pointer} .row-click:hover{background:var(--sky-soft)}
+  .bubble{padding:8px 10px;border-radius:8px;margin:6px 0;max-width:90%} .b-user{background:var(--sky-soft);margin-left:auto} .b-assistant{background:var(--soft);border:1px solid var(--line)}
 </style>
 </head>
 <body>
 <header>
-  <div><h1>ClinicDesk AI · Staff dashboard</h1><div class="sub" id="meta">Loading…</div></div>
-  <div><a class="act" href="/widget">Open patient chat →</a> <button class="act" onclick="setToken()">Admin token</button></div>
+  <div><h1>Staff dashboard</h1><div class="sub" id="meta">Loading</div></div>
+  <div><a class="act" href="/widget">Patient chat</a> <button class="act" onclick="setToken()">Admin token</button></div>
 </header>
 <nav id="tabs"></nav>
 <main id="view"></main>
@@ -62,7 +62,7 @@ const R = {
   async overview(){ const s = await api('/api/admin/stats?days=30');
     document.getElementById('meta').textContent = `Model provider: ${s.provider} · knowledge version ${s.knowledge_version} · last ${s.days} days`;
     const r = s.replies_by_route, total = Object.values(r).reduce((a,b)=>a+b,0)||1, noLLM=(r.red_flag||0)+(r.security||0)+(r.cache||0)+(r.rate_limit||0);
-    const labels = {agent:'AI agent (main model)', small:'Small model only', cache:'Answer cache', red_flag:'Safety rule → staff', security:'Injection blocked', rate_limit:'Rate limited', fallback:'Fallback'};
+    const labels = {agent:'AI agent (main model)', small:'Small model only', cache:'Answer cache', red_flag:'Safety rule, sent to staff', security:'Injection blocked', rate_limit:'Rate limited', fallback:'Fallback'};
     view.innerHTML = `<div class="tiles">
       <div class="tile"><b>${s.conversations}</b><span>Conversations</span></div>
       <div class="tile"><b>${s.bookings}</b><span>Bookings made by the agent</span></div>
