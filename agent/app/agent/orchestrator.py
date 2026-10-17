@@ -99,7 +99,11 @@ def _cache_key(language: str, text: str) -> str:
     return hashlib.sha256(f"{KB.version}|{language}|{norm}".encode()).hexdigest()
 
 
+_PLAIN = str.maketrans({"‑": "-", "‐": "-", " ": " ", " ": " "})
+
+
 def _finish(cid: int, text: str, route: str, language: str, tools: list[str] | None = None) -> Reply:
+    text = text.translate(_PLAIN)  # models like non-breaking hyphens/spaces; WhatsApp search and copy-paste do not
     _log(cid, "assistant", text, route)
     return Reply(text, route, cid, language, tools or [], conversation_cost_bdt(cid))
 
@@ -178,7 +182,7 @@ def handle_message(channel: str, sender_id: str, text: str, client_key: str = ""
         now = local_now()
         msgs = history
         # Give the model the un-redacted current message (it may contain the phone number to book with).
-        msgs[-1] = {"role": "user", "content": f"{NOW_NOTE.format(now=now.strftime('%A %d %B %Y, %H:%M'))}\n\n{text}"}
+        msgs[-1] = {"role": "user", "content": f"{NOW_NOTE.format(now=now.strftime('%A %d %B %Y, %H:%M'), language='Bangla' if language == 'bn' else 'English')}\n\n{text}"}
         phone_on_file = _remember_phone(cid, text, channel, sender_id)
         if phone_on_file:
             msgs[-1]["content"] += f"\n[Context] Patient's mobile number on file: {phone_on_file}"

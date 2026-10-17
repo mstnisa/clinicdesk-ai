@@ -8,7 +8,7 @@
    - `Bookings`: Booking ID, Name, Phone, Service, Slot, Fee (BDT), Reason
 
    Put its ID in `CLINICDESK_SHEET_ID`.
-5. Set `CLINICDESK_CALENDAR_ID` (your calendar email) and `CLINICDESK_ALERT_EMAIL` (who gets escalations and the daily report).
+5. Set `CLINICDESK_CALENDAR_ID` to the calendar's email-style ID (for your main calendar, your Gmail address; n8n rejects the word `primary`) and `CLINICDESK_ALERT_EMAIL` (who gets escalations and the daily report).
 6. Optional but recommended: set the same `N8N_WEBHOOK_SECRET` for the agent and n8n. Workflow 01 then drops events without the matching `X-Webhook-Secret` header.
 7. **Activate** the workflows. The agent's `N8N_WEBHOOK_URL` defaults to `http://n8n:5678/webhook/clinicdesk-events` inside Docker.
 

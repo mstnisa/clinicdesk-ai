@@ -160,11 +160,13 @@ It finds clinics, looks at each website for a WhatsApp link, an online booking f
 
 ```bash
 cd agent
-pytest                # 47 tests
+pytest                # 52 tests
 python -m evals.run   # 25 conversation checks, results in evals/RESULTS.md
 ```
 
-The tests cover the safety rules, bookings, the human handover, WhatsApp webhooks, the approval rule, double booking, the request formats for each provider, and the sales pipeline. The conversation checks run real chats in both languages and check the outcome: was the right page cited, was the warning sign escalated, was the injection blocked. All of them run on GitHub Actions on every push.
+The tests cover the safety rules, bookings, the human handover, WhatsApp webhooks, the approval rule, double booking, the request formats for each provider, and the sales pipeline. The conversation checks run real chats in both languages and check the outcome: was the right page cited, was the warning sign escalated, was the injection blocked. All of them run on GitHub Actions on every push. A second job builds the whole Docker stack (app, Postgres, n8n), runs [`deploy/smoke-test.sh`](deploy/smoke-test.sh) against it and imports the n8n workflows.
+
+The mock model always behaves, so I also ran the agent against real Groq models. That found four real problems, including a booking confirmation with the wrong weekday and made-up Friday opening hours. All four are fixed and have tests. Details: [docs/real-model-test.md](docs/real-model-test.md)
 
 ## Project layout
 

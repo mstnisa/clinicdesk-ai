@@ -1,9 +1,9 @@
 # Eval results
 
-- Run: 2026-10-17 17:04
+- Run: 2026-10-17 20:57
 - Provider: `mock` (offline deterministic mock — re-run with a real provider key to evaluate model behaviour)
 - **Passed 25/25**
-- Model calls: 54 · total cost ৳1.06 · cost per conversation ৳0.042
+- Model calls: 54 · total cost ৳1.11 · cost per conversation ৳0.044
 
 | Category | Passed |
 | --- | --- |

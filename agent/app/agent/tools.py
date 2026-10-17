@@ -68,13 +68,19 @@ def search_knowledge(ctx: ToolContext, query: str) -> dict:
         return {"results": [], "instruction": "No approved clinic information matches. Do NOT answer from "
                 "general knowledge. Say the clinic has no approved information on this yet and offer an "
                 "assessment booking or a call from a physiotherapist."}
-    return {"results": [{"citation": s.citation, "text": s.text_en, "text_bn": s.text_bn, "score": sc}
-                        for s, sc in hits]}
+    # Only the patient's language: given both, models tend to answer in whichever they read last.
+    bangla = ctx.language == "bn"
+    return {"results": [{"citation": s.citation, "text": (s.text_bn or s.text_en) if bangla else s.text_en,
+                         "score": sc} for s, sc in hits]}
 
 
 def get_clinic_info(ctx: ToolContext) -> dict:
     c = clinic()
-    return {k: c[k] for k in ("name", "address", "phone", "hours", "services", "payment", "cancellation")}
+    info = {k: c[k] for k in ("name", "address", "phone", "services", "payment", "cancellation")}
+    # Every weekday spelled out, closed days included: a missing day invites the model to guess.
+    days = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    info["hours"] = {d: (f"{c['hours'][d][0]}-{c['hours'][d][1]}" if d in c["hours"] else "closed") for d in days}
+    return info
 
 
 def _slots(days_ahead: int = 7, service: str = "assessment") -> list[datetime]:
@@ -172,7 +178,9 @@ def book_appointment(ctx: ToolContext, name: str, phone: str, slot_start: str,
                "service": svc["name"], "fee_bdt": svc["fee_bdt"], "slot_start": slot_start,
                "timezone": clinic()["timezone"], "channel": ctx.channel, "reason": reason}
     notify("booking.created", payload)
-    return {"confirmed": True, **payload, "address": clinic()["address"]}
+    when = datetime.strptime(slot_start, "%Y-%m-%d %H:%M")
+    # Give the model the weekday in words: left to itself it sometimes guesses it wrong.
+    return {"confirmed": True, **payload, "when": when.strftime("%A %d %B %Y, %H:%M"), "address": clinic()["address"]}
 
 
 def escalate_to_human(ctx: ToolContext, reason: str) -> dict:

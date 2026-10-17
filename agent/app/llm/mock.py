@@ -128,7 +128,7 @@ class MockProvider(Provider):
                         "We don't have clinician-approved information on that yet. A physiotherapist can "
                         "check it at an assessment. Shall I book one for you?")
             top = data["results"][0]
-            body = top["text_bn"] if bn and top.get("text_bn") else re.sub(r"\s*\[[^\]]+\]", "", top["text"])
+            body = re.sub(r"\s*\[[^\]]+\]", "", top["text"])  # already in the patient's language
             src = top["citation"].split(":")[0]
             tail = "\nঅ্যাপয়েন্টমেন্ট লাগলে বলুন।" if bn else "\nWant me to book an assessment?"
             return f"{body}\n(Source: {src}){tail}"
