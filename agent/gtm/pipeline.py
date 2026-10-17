@@ -94,6 +94,10 @@ def enrich(p: Place) -> Place:
         except httpx.HTTPError:
             pass
     cat = f"{p.category} {p.name}".lower()
+    category = p.category.lower()
+    # Found on live Google Maps data: "Rehabilitation center" also covers drug-addiction centres, and many
+    # small physio clinics call themselves "hospital". Judge hospitals by the listed category first.
+    physio_category = bool(re.search(r"physio|physical therap|chiropract", category))
     p.signals = {
         "is_physio_or_rehab": bool(re.search(r"physio|rehab|spine|sports", cat)),
         "in_target_city": "dhaka" in f"{p.city} {p.address}".lower(),
@@ -102,7 +106,8 @@ def enrich(p: Place) -> Place:
         "no_online_booking": not _BOOKING.search(text),
         "good_rating": p.rating >= 4.0,
         "enough_reviews": 20 <= p.reviews <= 500,
-        "is_hospital": "hospital" in cat,
+        "is_hospital": "hospital" in category or ("hospital" in cat and not physio_category),
+        "is_addiction_centre": bool(re.search(r"addiction|drug|de-?addiction|মাদক|নেশা", cat)),
         "permanently_closed": p.closed,
         "outside_target_city": "dhaka" not in f"{p.city} {p.address}".lower(),
     }

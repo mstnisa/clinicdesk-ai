@@ -39,3 +39,14 @@ One more change: Groq no longer serves `llama-3.1-8b-instant` on this account, s
   - In the events workflow, a wrong webhook secret was dropped at the first check. A correct one was routed to the calendar step.
   - That run also showed that n8n rejects `primary` as a calendar ID, so the docs now say to use the calendar's email-style ID.
   - With a real Google account connected, the calendar step created the booking as a calendar event with the right service, time and Dhaka time zone. The test event was then deleted. The daily report was also sent once through Gmail, to my own address, and Gmail confirmed it as sent.
+
+## Live Google Maps data
+
+I also ran the sales pipeline on real data: Apify's Google Maps actor, the four search queries in `agent/gtm/icp.yaml`, five places each. That gave 20 real clinics in Dhaka. Their websites were fetched through n8n to look for a WhatsApp link, an online booking form and a contact email. 7 of 11 sites loaded. The real clinics are not listed here, because the repository is public.
+
+Real data showed two mistakes in the scoring that the made-up sample could not:
+
+1. **Drug rehab counted as physio.** On Google Maps, "Rehabilitation center" also covers addiction treatment centres. One scored 85 and would have been emailed. Addiction centres are now disqualified.
+2. **A physio clinic disqualified as a hospital.** Many small clinics put "Hospital" in their name. The check used to look at the name. Now it looks at the category Google lists first, so a "Physical therapy clinic" named "... Hospital" is scored normally, and a real hospital is still skipped.
+
+Both have a test in `agent/tests/test_integrations.py`.

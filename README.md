@@ -160,7 +160,7 @@ It finds clinics, looks at each website for a WhatsApp link, an online booking f
 
 ```bash
 cd agent
-pytest                # 53 tests
+pytest                # 54 tests
 python -m evals.run   # 25 conversation checks, results in evals/RESULTS.md
 ```
 

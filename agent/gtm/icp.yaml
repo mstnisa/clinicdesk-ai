@@ -21,6 +21,7 @@ signals:
   enough_reviews:       {points: 10, why: "20-500 reviews: busy enough to need help, small enough to sell to"}
 disqualify:
   - is_hospital         # big hospitals buy through procurement, not a fit
+  - is_addiction_centre # "rehabilitation" on Google Maps also means drug rehab: not our market
   - permanently_closed
   - outside_target_city # we can only do onboarding visits in Dhaka for now
 min_score_to_contact: 60

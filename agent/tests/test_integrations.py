@@ -129,3 +129,12 @@ def test_daily_budget_falls_back_to_offline_model(monkeypatch):
     res = r.call(purpose="triage", tier="small", system="s", json_mode=True,
                  messages=[{"role": "user", "content": "hello"}])
     assert isinstance(res, LLMResult) and res.model == "mock-small"
+
+
+def test_icp_handles_real_google_maps_categories():
+    # Both cases came from a live Apify run over Dhaka physio clinics.
+    from gtm.pipeline import Place, enrich, score
+    physio = score(enrich(Place("Gulshan Physiotherapy Hospital", "Physical therapy clinic", "Dhaka", rating=4.8, reviews=40)))
+    drugs = score(enrich(Place("Hope Addiction Management Institute", "Rehabilitation center", "Dhaka", rating=5, reviews=20)))
+    big = score(enrich(Place("Metro Hospital", "Hospital", "Dhaka", rating=4.5, reviews=300)))
+    assert physio.score >= 60 and drugs.score == 0 and big.score == 0
