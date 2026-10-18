@@ -45,9 +45,11 @@ try:  # free Spaces run on ZeroGPU, which expects one GPU function; the app itse
 except ImportError:
     pass
 
-from scripts import seed_demo  # noqa: E402
+import subprocess  # noqa: E402
 
-seed_demo.main()
+# Sample data is written with the free offline model, so restarts never spend real model calls.
+subprocess.run([sys.executable, "-m", "scripts.seed_demo"], check=False,
+               env={**os.environ, "LLM_PROVIDER": "mock", "PYTHONPATH": str(HOME / "agent")})
 
 import uvicorn  # noqa: E402
 
