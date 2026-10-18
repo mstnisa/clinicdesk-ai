@@ -50,3 +50,7 @@ Real data showed two mistakes in the scoring that the made-up sample could not:
 2. **A physio clinic disqualified as a hospital.** Many small clinics put "Hospital" in their name. The check used to look at the name. Now it looks at the category Google lists first, so a "Physical therapy clinic" named "... Hospital" is scored normally, and a real hospital is still skipped.
 
 Both have a test in `agent/tests/test_integrations.py`.
+
+## WhatsApp, end to end
+
+On 18 October I connected the live demo to a Meta WhatsApp test number and sent "Do I need an MRI for my lower back pain?" from a real phone. The message reached the demo through the webhook and passed the signature check. Groq wrote the answer from the approved page, and it came back on WhatsApp. Getting there took four fixes on the Meta side, listed in [whatsapp-setup.md](whatsapp-setup.md).

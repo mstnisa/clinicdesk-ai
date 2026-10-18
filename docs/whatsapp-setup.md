@@ -25,3 +25,13 @@ Meta's dashboard labels change from time to time. The steps below follow the off
 ```bash
 curl -X POST localhost:8000/webhooks/whatsapp -H 'Content-Type: application/json' -d '{"entry":[{"changes":[{"value":{"messages":[{"id":"wamid.test1","from":"8801712345678","type":"text","text":{"body":"What are your fees?"}}]}}]}]}'
 ```
+
+## Things that tripped me up
+
+Found while connecting the live demo to a Meta test number:
+
+- **Link the WhatsApp account to your app.** Saving the webhook URL is not enough. Until you call `POST /{WABA_ID}/subscribed_apps` (Graph API Explorer works), real messages only show up in Meta's "Check test webhooks" panel and never reach your server.
+- **Publish the app.** While it is unpublished, Meta sends only dashboard test events. Publishing needs a privacy policy URL. The demo serves one at `/privacy`.
+- **Temporary tokens replace each other.** Every "Generate token" click cancels the previous one, and the server then gets `401 Authentication Error`. For anything long-lived, use a System User token.
+- **Keep the token and the app secret apart.** The token is long and starts with `EAA`. The app secret is 32 hex characters. If they get swapped, every webhook fails the signature check with `401`.
+- **Error 131030** means the reply went to a number that isn't on the test number's allowed list.
