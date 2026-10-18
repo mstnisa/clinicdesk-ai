@@ -108,6 +108,11 @@ def widget():
     return FileResponse(STATIC / "widget.html")
 
 
+@app.get("/privacy", include_in_schema=False)
+def privacy():
+    return FileResponse(STATIC / "privacy.html")
+
+
 @app.get("/dashboard", include_in_schema=False)
 def dashboard():
     return FileResponse(STATIC / "dashboard.html")
