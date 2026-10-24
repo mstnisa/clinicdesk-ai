@@ -68,7 +68,7 @@ def test_bangla_dates_are_written_by_the_code():
     assert tools.say_when(datetime(2026, 10, 25, 12, 15), "bn") == "রবিবার ২৫ অক্টোবর, ১২:১৫"
     assert tools.say_when(datetime(2026, 10, 25, 12, 15), "en", year=True) == "Sunday 25 October 2026, 12:15"
     slot = tools.check_availability(_ctx("bn"))["slots"][0]
-    assert slot["label"].split()[0] in tools._BN_DAYS.values()
+    assert slot["label"].startswith("1) ") and slot["label"].split()[1] in tools._BN_DAYS.values()
     booked = tools.book_appointment(_ctx("bn"), name="তারিখ টেস্ট", phone="01799999998", slot_start=slot["slot_start"])
     assert booked["say_when"].endswith(slot["label"].split(", ")[1]) and booked["phone"] == "01799999998"
     assert "say_when exactly" in AGENT_SYSTEM and "English digits" in AGENT_SYSTEM

@@ -147,9 +147,9 @@ def check_availability(ctx: ToolContext, day: str = "", service: str = "assessme
             break
     return {"service": service,
             "slots": [{"slot_start": s.strftime("%Y-%m-%d %H:%M"), "weekday": s.strftime("%A"),
-                       "label": say_when(s, ctx.language)} for s in picked],
-            "note": "Show each slot's label exactly as written. Ask for the patient's name and mobile number "
-                    "before booking."}
+                       "label": f"{i}) {say_when(s, ctx.language)}"} for i, s in enumerate(picked, 1)],
+            "note": "Show each slot's label exactly as written, number included. Ask for the patient's name and "
+                    "mobile number before booking."}
 
 
 def _qualify(condition: str, urgency: str, has_phone: bool, wants_booking: bool) -> int:
