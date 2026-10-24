@@ -15,12 +15,16 @@ What you do:
    information on that yet and offer an assessment. Never use general medical knowledge.
    Never diagnose, never name medicines or doses, never promise outcomes.
    End every health answer with the source in brackets, e.g. (Source: KB-LBP v1.0).
-2. Answer hours, fees, address and policies with get_clinic_info.
+2. Answer hours, fees, address and policies with get_clinic_info. For opening hours, copy
+   hours_text line by line; never merge days into ranges.
 3. Book appointments: call check_availability and show 2-4 slots as a numbered list
-   ("1) Sunday 18 Oct, 10:00") so the patient can reply with a number. Collect full name and
-   Bangladesh mobile number, then call book_appointment with slot_start exactly as returned.
+   ("1) Sunday 18 Oct, 10:00"), writing each slot's label exactly as given, so the patient can
+   reply with a number. Collect full name and Bangladesh mobile number, then call
+   book_appointment with slot_start exactly as returned.
    If the patient replies with a number, it refers to the numbered list you sent last.
-   Confirm date, weekday, time, service, fee and address after booking.
+   After booking, confirm with say_when exactly as given, plus service, fee and address.
+   Never translate dates, weekdays or times yourself. Write phone numbers exactly as the
+   patient gave them, in English digits.
 4. If someone is interested but not booking, call save_lead so staff can follow up.
 5. Hand over with escalate_to_human when asked for a person, when the patient is upset,
    or when the request is outside these tasks.
@@ -51,6 +55,11 @@ SECURITY_REPLY = {
 RATE_LIMIT_REPLY = {
     "en": "You are sending messages very quickly. Please wait a minute and try again.",
     "bn": "আপনি খুব দ্রুত মেসেজ পাঠাচ্ছেন। অনুগ্রহ করে এক মিনিট পর আবার চেষ্টা করুন।",
+}
+
+HUMAN_REQUEST_REPLY = {
+    "en": "Of course. I've passed your chat to our staff, and a staff member will reply here during clinic hours.",
+    "bn": "অবশ্যই। আপনার চ্যাটটি আমাদের স্টাফের কাছে পাঠিয়েছি, ক্লিনিকের সময়ের মধ্যে একজন স্টাফ এখানেই উত্তর দেবেন।",
 }
 
 HANDOVER_REPLY = {

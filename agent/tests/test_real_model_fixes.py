@@ -3,9 +3,11 @@
 The mock model behaves perfectly, so these check what the tools hand to the model:
 real models were fine once the tool results stopped leaving room for guesses.
 """
+from datetime import datetime
+
 from app import db
 from app.agent import tools
-from app.agent.orchestrator import _finish
+from app.agent.orchestrator import _TOOL_NAMES, _finish
 from app.agent.prompts import AGENT_SYSTEM, NOW_NOTE
 
 
@@ -51,3 +53,42 @@ def test_replies_use_plain_hyphens():
 def test_mock_reply_shows_real_opening_hours(chat):
     reply = chat("web-hours", "What are your opening hours?")["reply"]
     assert "Sat 10:00-20:00" in reply and "Fri closed" in reply
+
+
+def test_triage_runs_only_on_the_opening_message(chat):
+    # Seen alone, the mid-booking reply "2, আমার নাম ..." looked like a greeting to the small model.
+    cid = chat("web-triage", "I want to book an appointment")["conversation_id"]
+    chat("web-triage", "2, my name is Triage Test, 01812345679")
+    calls = db.rows(db.select(db.llm_calls.c.purpose).where(db.llm_calls.c.conversation_id == cid))
+    assert [c["purpose"] for c in calls].count("triage") == 1
+
+
+def test_bangla_dates_are_written_by_the_code():
+    # Translating "Sunday 25 Oct" itself, a real model wrote "সোমবার" (Monday).
+    assert tools.say_when(datetime(2026, 10, 25, 12, 15), "bn") == "রবিবার ২৫ অক্টোবর, ১২:১৫"
+    assert tools.say_when(datetime(2026, 10, 25, 12, 15), "en", year=True) == "Sunday 25 October 2026, 12:15"
+    slot = tools.check_availability(_ctx("bn"))["slots"][0]
+    assert slot["label"].split()[0] in tools._BN_DAYS.values()
+    booked = tools.book_appointment(_ctx("bn"), name="তারিখ টেস্ট", phone="01799999998", slot_start=slot["slot_start"])
+    assert booked["say_when"].endswith(slot["label"].split(", ")[1]) and booked["phone"] == "01799999998"
+    assert "say_when exactly" in AGENT_SYSTEM and "English digits" in AGENT_SYSTEM
+
+
+def test_bangla_hours_list_every_day():
+    # Summarising the days itself, a real model wrote "সোম-শুক্র" although Friday is closed.
+    lines = tools.get_clinic_info(_ctx("bn"))["hours_text"].splitlines()
+    assert len(lines) == 7 and "শুক্রবার: বন্ধ" in lines and "শনিবার: ১০:০০-২০:০০" in lines
+    assert "hours_text" in AGENT_SYSTEM
+
+
+def test_asking_for_a_person_always_reaches_staff(client, chat):
+    # A real model replied "সংযুক্ত করছি" without calling the handover tool, so no one was told.
+    r = chat("web-staff-bn", "আমি ক্লিনিকের একজন স্টাফের সাথে কথা বলতে চাই")
+    assert r["tools"] == ["escalate_to_human"] and r["route"] == "handover" and "স্টাফ" in r["reply"]
+    esc = db.rows(db.select(db.escalations.c.kind).where(db.escalations.c.conversation_id == r["conversation_id"]))
+    assert esc == [{"kind": "human_request"}]
+
+
+def test_tool_names_are_removed_from_replies():
+    assert _TOOL_NAMES.sub("", "আমি আপনাকে স্টাফের সঙ্গে সংযুক্ত করছি। (escalate_to_human)") == \
+        "আমি আপনাকে স্টাফের সঙ্গে সংযুক্ত করছি।"

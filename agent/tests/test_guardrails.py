@@ -37,6 +37,19 @@ def test_injection_detected(text):
     assert g.looks_like_injection(text)
 
 
+@pytest.mark.parametrize("text, wanted", [
+    ("I want to talk to a real person", True),
+    ("Can I speak with the receptionist?", True),
+    ("আমি একজন মানুষের সাথে কথা বলতে চাই", True),
+    ("আমি ক্লিনিকের একজন স্টাফের সাথে কথা বলতে চাই", True),
+    ("Do I need an MRI for my lower back pain?", False),
+    ("Should I see a doctor for heel pain?", False),
+    ("ফি কত?", False),
+])
+def test_asking_for_a_person(text, wanted):
+    assert g.wants_human(text) is wanted
+
+
 def test_pii_redaction():
     out = g.redact("Call me on 01712345678 or +8801812345678, mail rahim@example.com, NID 1234567890")
     assert "0171" not in out and "rahim@" not in out and "1234567890" not in out
