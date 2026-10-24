@@ -1,7 +1,7 @@
 """The conversation pipeline.
 
-    message ─► rate limit ─► red-flag rules ─► injection rules ─► answer cache
-            ─► small-model triage ─► (greeting? reply)  ─► main-model agent loop with tools
+    message ─► rate limit ─► red-flag rules ─► injection rules ─► asks for a person? ─► answer cache
+            ─► small-model triage (opening message) ─► (greeting? reply) ─► main-model agent loop with tools
 
 Cheap, deterministic layers run first; the expensive model runs last and only
 when it is actually needed. Every step is recorded for the dashboard.
@@ -18,9 +18,9 @@ from ..config import settings
 from ..llm.base import LLMError
 from ..llm.router import Router
 from . import guardrails as g
-from .prompts import (AGENT_SYSTEM, EMPTY_REPLY, FALLBACK_REPLY, HANDOVER_REPLY, NOW_NOTE, RATE_LIMIT_REPLY,
-                      RED_FLAG_REPLY, SECURITY_REPLY, TRIAGE_SYSTEM)
-from .tools import KB, TOOL_SPECS, ToolContext, clinic, local_now, notify, run_tool
+from .prompts import (AGENT_SYSTEM, EMPTY_REPLY, FALLBACK_REPLY, HANDOVER_REPLY, HUMAN_REQUEST_REPLY, NOW_NOTE,
+                      RATE_LIMIT_REPLY, RED_FLAG_REPLY, SECURITY_REPLY, TRIAGE_SYSTEM)
+from .tools import KB, TOOL_SPECS, TOOLS, ToolContext, clinic, local_now, notify, run_tool
 
 _limiter = g.RateLimiter(settings.rate_limit_per_minute)
 _router: Router | None = None
@@ -102,6 +102,10 @@ def _cache_key(language: str, text: str) -> str:
 _PLAIN = str.maketrans({"‑": "-", "‐": "-", " ": " ", " ": " "})
 
 
+# A real model sometimes wrote a tool's name into its reply, e.g. "(escalate_to_human)".
+_TOOL_NAMES = re.compile(r"\s*\(?`?\b(?:" + "|".join(TOOLS) + r")\b`?\)?")
+
+
 def _finish(cid: int, text: str, route: str, language: str, tools: list[str] | None = None) -> Reply:
     text = text.translate(_PLAIN)  # models like non-breaking hyphens/spaces; WhatsApp search and copy-paste do not
     _log(cid, "assistant", text, route)
@@ -151,7 +155,13 @@ def handle_message(channel: str, sender_id: str, text: str, client_key: str = ""
     if _status(cid) == "escalated":
         return _finish(cid, HANDOVER_REPLY[language], "handover", language)
 
-    # 5. answer cache: only for a conversation's opening question, so a reply that
+    # 5. asking for a person: a rule hands over, so staff are always told
+    ctx = ToolContext(cid, channel, sender_id, language)
+    if g.wants_human(text):
+        run_tool(ctx, "escalate_to_human", {"reason": "Patient asked for a person | " + g.redact(text)[:300]})
+        return _finish(cid, HUMAN_REQUEST_REPLY[language], "handover", language, ctx.used)
+
+    # 6. answer cache: only for a conversation's opening question, so a reply that
     #    depends on earlier context (or names the patient) is never reused for someone else
     history = _history(cid)
     first_question = len(history) == 1
@@ -164,20 +174,21 @@ def handle_message(channel: str, sender_id: str, text: str, client_key: str = ""
             return _finish(cid, cached[0]["answer"], "cache", language)
 
     r = router()
-    ctx = ToolContext(cid, channel, sender_id, language)
     try:
-        # 6. triage with the small model
-        tri = r.call(purpose="triage", tier="small", system=TRIAGE_SYSTEM, json_mode=True, max_tokens=150,
-                     messages=[{"role": "user", "content": text}], conversation_id=cid)
-        found = re.search(r"\{.*\}", tri.text or "", re.S)  # tolerate ```json fences or extra words
-        try:
-            triage = json.loads(found.group(0)) if found else {"intent": "other"}
-        except json.JSONDecodeError:
-            triage = {"intent": "other"}
-        if triage.get("intent") == "greeting" and triage.get("reply"):
-            return _finish(cid, triage["reply"], "small", language)
+        # 7. triage with the small model, for opening messages only: it sees one message without
+        #    the chat, so mid-booking "2, my name is ..." looked like a greeting to it
+        if first_question:
+            tri = r.call(purpose="triage", tier="small", system=TRIAGE_SYSTEM, json_mode=True, max_tokens=150,
+                         messages=[{"role": "user", "content": text}], conversation_id=cid)
+            found = re.search(r"\{.*\}", tri.text or "", re.S)  # tolerate ```json fences or extra words
+            try:
+                triage = json.loads(found.group(0)) if found else {"intent": "other"}
+            except json.JSONDecodeError:
+                triage = {"intent": "other"}
+            if triage.get("intent") == "greeting" and triage.get("reply"):
+                return _finish(cid, triage["reply"], "small", language)
 
-        # 7. agent loop with the main model
+        # 8. agent loop with the main model
         system = AGENT_SYSTEM.format(clinic=clinic()["name"])
         now = local_now()
         msgs = history
@@ -191,7 +202,7 @@ def handle_message(channel: str, sender_id: str, text: str, client_key: str = ""
             res = r.call(purpose="agent", tier="main", system=system, messages=msgs, tools=TOOL_SPECS,
                          conversation_id=cid, max_tokens=1200)
             if not res.tool_calls:
-                answer = res.text.strip()
+                answer = _TOOL_NAMES.sub("", res.text).strip()
                 break
             msgs.append({"role": "assistant", "content": res.text, "tool_calls": res.tool_calls})
             for call in res.tool_calls:

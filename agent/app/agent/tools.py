@@ -33,6 +33,23 @@ def local_now() -> datetime:
     return datetime.now(ZoneInfo(clinic()["timezone"]))
 
 
+# Dates and times written out in the patient's language. Translating them is left to
+# the code: a real model turned "Sunday 25 Oct" into "সোমবার" when it did it itself.
+_DAYS = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+_BN_DAYS = dict(zip(_DAYS, ["শনিবার", "রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার"]))
+_BN_MONTHS = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর",
+              "অক্টোবর", "নভেম্বর", "ডিসেম্বর"]
+_BN_DIGITS = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
+
+
+def say_when(dt: datetime, language: str, year: bool = False) -> str:
+    if language != "bn":
+        return dt.strftime("%A %d %B %Y, %H:%M" if year else "%A %d %b, %H:%M")
+    text = f"{_BN_DAYS[dt.strftime('%A')]} {dt.day} {_BN_MONTHS[dt.month - 1]}{f' {dt.year}' if year else ''}, " \
+           f"{dt.strftime('%H:%M')}"
+    return text.translate(_BN_DIGITS)
+
+
 @dataclass
 class ToolContext:
     conversation_id: int
@@ -78,8 +95,13 @@ def get_clinic_info(ctx: ToolContext) -> dict:
     c = clinic()
     info = {k: c[k] for k in ("name", "address", "phone", "services", "payment", "cancellation")}
     # Every weekday spelled out, closed days included: a missing day invites the model to guess.
-    days = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    info["hours"] = {d: (f"{c['hours'][d][0]}-{c['hours'][d][1]}" if d in c["hours"] else "closed") for d in days}
+    info["hours"] = {d: (f"{c['hours'][d][0]}-{c['hours'][d][1]}" if d in c["hours"] else "closed") for d in _DAYS}
+    # Ready to copy, one line per day: summarising the days itself, a real model wrote "Mon-Fri" while Friday is closed.
+    if ctx.language == "bn":
+        info["hours_text"] = "\n".join(
+            f"{_BN_DAYS[d]}: {'বন্ধ' if h == 'closed' else h.translate(_BN_DIGITS)}" for d, h in info["hours"].items())
+    else:
+        info["hours_text"] = "\n".join(f"{d}: {h}" for d, h in info["hours"].items())
     return info
 
 
@@ -124,8 +146,10 @@ def check_availability(ctx: ToolContext, day: str = "", service: str = "assessme
         if len(picked) == 6:
             break
     return {"service": service,
-            "slots": [{"slot_start": s.strftime("%Y-%m-%d %H:%M"), "weekday": s.strftime("%A")} for s in picked],
-            "note": "Ask for the patient's name and mobile number before booking."}
+            "slots": [{"slot_start": s.strftime("%Y-%m-%d %H:%M"), "weekday": s.strftime("%A"),
+                       "label": say_when(s, ctx.language)} for s in picked],
+            "note": "Show each slot's label exactly as written. Ask for the patient's name and mobile number "
+                    "before booking."}
 
 
 def _qualify(condition: str, urgency: str, has_phone: bool, wants_booking: bool) -> int:
@@ -180,7 +204,9 @@ def book_appointment(ctx: ToolContext, name: str, phone: str, slot_start: str,
     notify("booking.created", payload)
     when = datetime.strptime(slot_start, "%Y-%m-%d %H:%M")
     # Give the model the weekday in words: left to itself it sometimes guesses it wrong.
-    return {"confirmed": True, **payload, "when": when.strftime("%A %d %B %Y, %H:%M"), "address": clinic()["address"]}
+    return {"confirmed": True, **payload, "when": when.strftime("%A %d %B %Y, %H:%M"),
+            "say_when": say_when(when, ctx.language, year=True), "address": clinic()["address"],
+            "note": "Confirm using say_when exactly as written, and the phone number exactly as given."}
 
 
 def escalate_to_human(ctx: ToolContext, reason: str) -> dict:

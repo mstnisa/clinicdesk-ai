@@ -70,6 +70,21 @@ def looks_like_injection(text: str) -> bool:
     return bool(_INJECTION.search(text))
 
 
+# ----------------------------------------------------------- human request
+# A real model said "I'm transferring you" without calling the handover tool,
+# so nobody was told. Asking for a person is now a rule, like red flags.
+_HUMAN = re.compile(
+    r"\b(real|actual|live) (person|human)\b|\bhuman (agent|being)\b"
+    r"|\b(talk|speak|chat) (to|with) (a |an |the |your )?(human|person|staff|someone|receptionist|front desk)\b"
+    r"|(মানুষের|মানুষ|স্টাফের|স্টাফ|কর্মীর|রিসেপশনের|কারো|কারও) (সাথে|সঙ্গে) কথা",
+    re.I,
+)
+
+
+def wants_human(text: str) -> bool:
+    return bool(_HUMAN.search(text))
+
+
 # ----------------------------------------------------------------- PII
 _PII = [
     (re.compile(r"(?:\+?88)?01[3-9]\d{8}"), "[PHONE]"),
