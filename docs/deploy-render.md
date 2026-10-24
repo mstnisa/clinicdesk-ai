@@ -30,6 +30,6 @@ Hugging Face Space: fake demo data in SQLite, reloaded on every start.
 
 | Limit | Effect | What to do |
 | --- | --- | --- |
-| Sleeps after ~15 min idle | First request takes ~30–60 s | Before a demo or interview, open `/health` once. A free uptime monitor (e.g. UptimeRobot) pinging `/health` every 10 min keeps it awake. |
+| Sleeps after ~15 min idle | First request takes ~30–60 s | [`keep-awake.yml`](../.github/workflows/keep-awake.yml) pings `/health` every 5 min from GitHub Actions. GitHub can delay scheduled runs, so before a demo or interview open `/health` once yourself. |
 | Disk is not persistent | Demo data resets on every restart or deploy | Intended: the demo reseeds itself on start. |
 | `DAILY_LLM_CALL_BUDGET=400` | Past the cap the offline model answers | Keeps the Groq quota (and the bill) safe. |

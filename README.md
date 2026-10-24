@@ -2,7 +2,7 @@
 
 An AI front desk for physiotherapy clinics. It replies to patients on WhatsApp and on the clinic's website, in Bangla or English, answers their questions, books appointments, and passes the conversation to a staff member when it should.
 
-**Live demo:** https://awalunnisa-clinicdesk-ai.hf.space/widget (patient chat) · [staff dashboard](https://awalunnisa-clinicdesk-ai.hf.space/dashboard)
+**Live demo:** https://clinicdesk.awalunnisa.com/widget (patient chat) · [staff dashboard](https://clinicdesk.awalunnisa.com/dashboard) · mirror on [Hugging Face](https://awalunnisa-clinicdesk-ai.hf.space/widget)
 
 ![tests](https://github.com/mstnisa/clinicdesk-ai/actions/workflows/ci.yml/badge.svg)
 
@@ -34,7 +34,7 @@ A chatbot could take this load, but in healthcare a careless one does real harm.
 
 ## Try it
 
-Open the [live demo](https://awalunnisa-clinicdesk-ai.hf.space/widget) and send a few of these:
+Open the [live demo](https://clinicdesk.awalunnisa.com/widget) and send a few of these:
 
 | Message | What you should see |
 | --- | --- |
@@ -134,6 +134,7 @@ ADMIN_TOKEN=a-long-random-string
 
 Guides:
 - [Deploying on a VPS with HTTPS](docs/deploy-vps.md)
+- [Deploying the free demo on Render with a custom domain](docs/deploy-render.md)
 - [Connecting WhatsApp Business](docs/whatsapp-setup.md)
 - [Setting up the n8n workflows](docs/n8n.md)
 - [Day-to-day use for clinic staff](docs/runbook.md)
