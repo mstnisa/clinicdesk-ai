@@ -1,0 +1,17 @@
+name: keep demo awake
+
+# The free Render service sleeps after ~15 min idle and then needs 30-60 s to wake.
+# Pinging /health every few minutes keeps the public demo fast for visitors.
+# GitHub may delay scheduled runs at busy times, so this runs more often than strictly needed.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /health
+        run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 https://clinicdesk.awalunnisa.com/health
