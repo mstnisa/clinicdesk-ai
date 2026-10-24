@@ -1,0 +1,33 @@
+# Render blueprint for the free public demo at https://clinicdesk.awalunnisa.com
+# Same setup as the Hugging Face Space: fake demo data in SQLite, reloaded on every start.
+# Setup steps: docs/deploy-render.md
+services:
+  - type: web
+    name: clinicdesk-ai
+    runtime: python
+    plan: free
+    rootDir: agent
+    buildCommand: pip install -r requirements.txt
+    # Sample data is written with the free offline model, so restarts never spend real model calls.
+    startCommand: >-
+      LLM_PROVIDER=mock python -m scripts.seed_demo &&
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips '*'
+    healthCheckPath: /health
+    domains:
+      - clinicdesk.awalunnisa.com
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      # Public demo: fake data, shared dashboard token, strict limits.
+      - key: DEMO_MODE
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:////tmp/clinicdesk.db
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "12"
+      - key: DAILY_LLM_CALL_BUDGET
+        value: "400"
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false   # entered by hand in the Render dashboard, never committed
