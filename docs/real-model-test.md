@@ -33,6 +33,7 @@ One more change: Groq no longer serves `llama-3.1-8b-instant` on this account, s
 
 ## The rest of the stack
 
+- **Docker on a normal PC:** on 24 October I ran the full stack with Docker Desktop 29.8 on a Windows 11 laptop. The app, Postgres and n8n were all started with `docker compose`. All 11 checks passed: a health answer with its source, a warning sign handed to staff, prompt injection blocked, a booking saved and visible both in the admin API and directly in Postgres, the admin API refusing requests without a token, and all 4 n8n workflows imported.
 - **Docker:** a GitHub Actions job builds the full stack (app, Postgres, n8n) on every push. It runs `deploy/smoke-test.sh` against it (a health answer, a warning sign, an injection attempt, a booking saved in Postgres, the admin API refusing requests without a token) and then imports all four n8n workflows into the running n8n.
 - **n8n:** I imported the four workflows into a normal n8n install and ran test copies of them:
   - The daily report pulled real numbers from the live demo and formatted the email. The send step was switched off.
