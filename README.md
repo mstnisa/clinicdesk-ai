@@ -4,7 +4,11 @@ An AI front desk for physiotherapy clinics. It replies to patients on WhatsApp a
 
 **Live demo:** https://clinicdesk.awalunnisa.com/widget (patient chat) · [staff dashboard](https://clinicdesk.awalunnisa.com/dashboard) · mirror on [Hugging Face](https://awalunnisa-clinicdesk-ai.hf.space/widget)
 
-**Promo video (Bangla, 60 s):** [docs/promo/clinicdesk-promo.mp4](docs/promo/clinicdesk-promo.mp4)
+
+
+https://github.com/user-attachments/assets/441c92bd-91ba-49b1-b332-5ceb44f1c6dc
+
+
 
 ![tests](https://github.com/mstnisa/clinicdesk-ai/actions/workflows/ci.yml/badge.svg)
 
