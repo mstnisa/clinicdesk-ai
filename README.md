@@ -200,4 +200,4 @@ docs/             guides
 
 ## About
 
-Built by **Mst. Awalunnisa**. The clinic, patients and sales leads in this repository are made up for the demo. Released under the MIT License.
+Built by **Mst. Awalunnisa**. The clinic, patients and sales leads in this repository are made up for the demo.
